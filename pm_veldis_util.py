@@ -4,11 +4,11 @@
 ## Author : Pritom Mozumdar
 
 #from ppxf.ppxf import ppxf
-#import ppxf.ppxf_util as util
-#from specim.specfuncs import spec1d
+import ppxf.ppxf_util as util
+from specim.specfuncs import spec1d
 import numpy as np
 #import matplotlib.pyplot as plt
-#import glob
+import glob
 #from random import sample
 #import pandas as pd
 #import seaborn as sn
@@ -74,3 +74,130 @@ def gen_sigma_diff(sig_ins=0, fwhm_temp=0, lam_gal=0, lam_temp=0):
     sigma_diff = fwhm_diff / 2.355
     
     return sigma_diff
+
+####################################################################################################
+
+def masking(length, pixel_range, log_lamda_gal):
+    '''
+    This function generate and returns a boolean array with value 'False'
+    in the pixel locations which should be excluded from the fit.
+    
+    Parameters
+    ---------------
+    length: int
+        The length of the logarithmically rebinned galaxy spectra. The 
+        boolean array would be of the same size.
+        
+    pixel_range: list
+        A list of tuples where each tuple contains start and end of the
+        pixel range needs to be excluded.
+        
+    log_lamda_gal: array
+        This array contains the values of the logarithmically 
+        rebinned wavelengths.
+    
+    Returns
+    -------------
+    mask : boolean array
+        Boolean array with with value 'False' in the pixel locations 
+        which should be excluded from the fit.
+        
+    '''
+    
+    mask = np.zeros(length, dtype=bool)
+    for i,p in enumerate(pixel_range):
+        mask |= (log_lamda_gal>=p[0]) & (log_lamda_gal <= p[1])
+    return (~mask)
+
+######################################################################################################
+
+def gen_rebinned_templates(lib_path=0, temp_num=0, temp_array=0, sigma_diff=0, v=0):
+    '''
+    This function generates and returns an array containing logarithmically 
+    rebinned template spectra.
+    
+    Parameters
+    ---------------
+    lib_path: string
+        path to the directory containing template library.
+        
+    temp_num: int
+        Number of templates that would be logarithmically rebinned. If
+        given that amount of template spectra would be fetched from
+        library, rebinned and stored in the array.
+    
+    temp_array: array
+        An array containing template file names which would be 
+        logarithmically rebinned. If given only those template spectra 
+        would be fetched from library, rebinned and stored in the array.
+    
+    sigma_diff: array
+        An array with the differences in sigma per wavelength of 
+        the instrumental LSF's used to collect galaxy spectrum and 
+        template spectra.
+    
+    v: float
+        Velocity scale of the galaxy.
+    
+    Returns
+    -------------
+    templates: array
+        An array containging all the logarithmically rebinned and normalized
+        template spectra.
+    
+    '''
+    
+    filename = []
+    templates = []
+    
+    if(temp_num):
+        
+        indo_us_library = glob.glob(lib_path)[:temp_num]
+        
+        lam_temp = spec1d.Spec1d(indo_us_library[0], verbose=False)['wav']
+        lam_temp_range = [lam_temp[0], lam_temp[-1]]
+
+        for j, file_name in enumerate(indo_us_library):
+        
+            filename.append(file_name)
+        
+            template_data = spec1d.Spec1d(file_name, verbose=False)
+            template_spectra = template_data['flux']
+
+            # perform convolution with variable sigma_diff    
+            convolved_temp_spectra= util.gaussian_filter1d(template_spectra, sigma_diff)  
+
+            template_spectra_rebinned = util.log_rebin(lam_temp_range, convolved_temp_spectra, 
+                                                       velscale=v)[0]
+            nor_temp = template_spectra_rebinned / np.median(template_spectra_rebinned)  
+            
+            templates.append(nor_temp)
+            
+        templates = np.swapaxes(np.array(templates), 0, 1)
+            
+        return templates
+    
+    else:
+        
+        lam_temp = spec1d.Spec1d(temp_array[0], verbose=False)['wav']
+        lam_temp_range = [lam_temp[0], lam_temp[-1]]
+        
+        for j, file_name in enumerate(temp_array):
+        
+            filename.append(file_name)
+        
+            template_data = spec1d.Spec1d(file_name, verbose=False)
+            template_spectra = template_data['flux']
+
+            # perform convolution with variable sigma_diff    
+            convolved_temp_spectra= util.gaussian_filter1d(template_spectra, sigma_diff)  
+
+            template_spectra_rebinned = util.log_rebin(lam_temp_range, convolved_temp_spectra, 
+                                          velscale=v)[0]
+            nor_temp = template_spectra_rebinned / np.median(template_spectra_rebinned)
+            
+            templates.append(nor_temp)
+          
+        templates = np.swapaxes(np.array(templates), 0, 1)
+            
+        return templates
