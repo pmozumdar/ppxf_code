@@ -38,3 +38,39 @@ def velocity_scale(lamda_gal):
     return vel_scale
 
 ###############################################################################################
+
+def gen_sigma_diff(sig_ins=0, fwhm_temp=0, lam_gal=0, lam_temp=0):
+    '''
+    This function calculates and returns the differences in sigma per wavelength of 
+    the instrumental LSF's used to collect galaxy spectrum and template spectra.
+    
+    Parameters
+    ---------------
+    sig_ins: float
+        sigma value of the instrumental LSF used to collect galaxy spectra.
+    
+    fwhm_temp: float
+        FWHM value of the template spectra.
+        
+    lam_gal: array
+       An array containing the wavelengths of the galaxy spectra.
+       
+    lam_temp: array
+       An array containing the wavelengths of the template spectra.
+    
+    Returns
+    -------------
+    sigma_diff: array
+        An array containing the differences in sigma per wavelength.
+     
+    '''
+    
+    sigma_instrument = sig_ins                       #sigma of the instrumental LSF
+    fwhm_galaxy = 2.355 * sigma_instrument           # FWHM of every pixel in Angstrom
+    fwhm_galaxy_spectra  = np.full(len(lam_gal), fwhm_galaxy)
+    
+    fwhm_interp_gal_spec = np.interp(lam_temp, lam_gal, fwhm_galaxy_spectra)  #interpolated fwhm
+    fwhm_diff = np.sqrt(fwhm_interp_gal_spec**2 - fwhm_temp**2)
+    sigma_diff = fwhm_diff / 2.355
+    
+    return sigma_diff
