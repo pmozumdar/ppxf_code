@@ -39,6 +39,32 @@ def velocity_scale(lamda_gal):
 
 ###############################################################################################
 
+def wav_dev(lamda_gal):
+    '''
+    This function calculates the parameter 'dv' to account for the difference
+    of the initial wavelength in the galaxy and template spectra.
+    
+    Parameters
+    ---------------
+    lamda_gal: float
+        Starting wavelength of the galaxy spectra. 
+    
+    Returns
+    -------------
+    dv: float
+        The parameter to account for the initial wavelegth difference.
+    '''
+    
+    c = 299792.458               # speed of light in km/s
+    lamda_temp = 3465.00         # starting wavelength of the templates
+                                 # in the Indo-US library.
+    dv = c*np.log(lamda_temp / lamda_gal) 
+    print('dv = %f ' %dv)
+    
+    return dv
+
+###############################################################################################
+
 def gen_sigma_diff(sig_ins=0, fwhm_temp=0, lam_gal=0, lam_temp=0):
     '''
     This function calculates and returns the differences in sigma per wavelength of 
