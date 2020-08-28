@@ -108,17 +108,13 @@ def gen_sigma_diff(sig_ins=0, fwhm_temp=0, lam_gal=0, lam_temp=0):
 
 ####################################################################################################
 
-def masking(length, pixel_range, log_lamda_gal):
+def masking(pixel_range, log_lamda_gal):
     '''
     This function generate and returns a boolean array with value 'False'
     in the pixel locations which should be excluded from the fit.
     
     Parameters
-    ---------------
-    length: int
-        The length of the logarithmically rebinned galaxy spectra. The 
-        boolean array would be of the same size.
-        
+    ---------------   
     pixel_range: list
         A list of tuples where each tuple contains start and end of the
         pixel range needs to be excluded.
@@ -135,7 +131,7 @@ def masking(length, pixel_range, log_lamda_gal):
         
     '''
     
-    mask = np.zeros(length, dtype=bool)
+    mask = np.zeros(len(log_lamda_gal), dtype=bool)
     for i,p in enumerate(pixel_range):
         mask |= (log_lamda_gal>=p[0]) & (log_lamda_gal <= p[1])
     return (~mask)
