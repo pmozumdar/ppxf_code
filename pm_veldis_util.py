@@ -7,7 +7,7 @@
 import ppxf.ppxf_util as util
 from specim.specfuncs import spec1d
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import glob
 #from random import sample
 #import pandas as pd
@@ -90,7 +90,8 @@ def gen_sigma_diff(sig_ins=0, fwhm_temp=0, lam_gal=0, lam_temp=0):
         An array containing the differences in sigma per wavelength.
      
     '''
-    
+    lam_temp = spec1d.Spec1d('../TEXT/101484.txt', verbose=False)['wav']
+    fwhm_temp = 1.35                                 # for indo-us template library
     sigma_instrument = sig_ins                       #sigma of the instrumental LSF
     fwhm_galaxy = 2.355 * sigma_instrument           # FWHM of every pixel in Angstrom
     fwhm_galaxy_spectra  = np.full(len(lam_gal), fwhm_galaxy)
@@ -98,6 +99,10 @@ def gen_sigma_diff(sig_ins=0, fwhm_temp=0, lam_gal=0, lam_temp=0):
     fwhm_interp_gal_spec = np.interp(lam_temp, lam_gal, fwhm_galaxy_spectra)  #interpolated fwhm
     fwhm_diff = np.sqrt(fwhm_interp_gal_spec**2 - fwhm_temp**2)
     sigma_diff = fwhm_diff / 2.355
+    
+    plt.plot(lam_temp, sigma_diff,'.', label='sigma_diff')
+    plt.legend()
+    plt.show()
     
     return sigma_diff
 
