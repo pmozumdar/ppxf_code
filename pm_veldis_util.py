@@ -65,13 +65,16 @@ def wav_dev(lamda_gal):
 
 ###############################################################################################
 
-def gen_sigma_diff(sig_ins=0, fwhm_temp=0, lam_gal=0, lam_temp=0):
+def gen_sigma_diff(infile, sig_ins=0, fwhm_temp=None, lam_gal=0, lam_temp=0):
     '''
     This function calculates and returns the differences in sigma per wavelength of 
     the instrumental LSF's used to collect galaxy spectrum and template spectra.
     
     Parameters
     ---------------
+    infile: string 
+        contains a template file location and/or file name.
+        
     sig_ins: float
         sigma value of the instrumental LSF used to collect galaxy spectra.
     
@@ -90,9 +93,24 @@ def gen_sigma_diff(sig_ins=0, fwhm_temp=0, lam_gal=0, lam_temp=0):
         An array containing the differences in sigma per wavelength.
      
     '''
-    lam_temp = spec1d.Spec1d('../TEXT/101484.txt', verbose=False)['wav']
-    fwhm_temp = 1.35                                 # for indo-us template library
-    sigma_instrument = sig_ins                       #sigma of the instrumental LSF
+    try:
+        lam_temp = spec1d.Spec1d(infile, verbose=False)['wav']
+    except:
+        print('Error : need to provide a valid template file name and location as input')
+        
+    try:
+        if sig_ins > 0 :
+            sigma_instrument = sig_ins  #sigma of the instrumental LSF
+    except:
+        print("Error : sigma of the instrumental LSF should be greater than zero.")
+        
+    if fwhm_temp is None:
+        print("\nAs no \'fwhm_temp\' value is provided, FWHM for the Indo-US template"\
+              "library will be used as default value")
+        fwhm_temp = 1.35                             # for indo-us template library
+    else:
+        fwhm_temp = fwhm_temp
+        
     fwhm_galaxy = 2.355 * sigma_instrument           # FWHM of every pixel in Angstrom
     fwhm_galaxy_spectra  = np.full(len(lam_gal), fwhm_galaxy)
     
