@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#Files/Folders in this directory
+*.txt
+HE0435_analysis_data/
+sky_lines.dat
+*.pdf
